@@ -7,6 +7,36 @@
 #include <netdb.h>
 #include <unistd.h>
 
+void runUDP(uint16_t port)
+{
+    sockaddr_in serverAddr, clientAddr;
+    auto clientAddrLen = sizeof(clientAddr);
+    auto serverSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+    if (serverSocket == -1)
+        throw std::runtime_error("creating socket error");
+
+    memset(&serverAddr, 0, sizeof (serverAddr));
+    serverAddr.sin_family = PF_INET;
+    serverAddr.sin_port = htons(port);
+    serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if (bind(serverSocket, (sockaddr*)&serverAddr, sizeof (serverAddr)) == -1)
+    {
+        close(serverSocket);
+        throw std::runtime_error("binding error");
+    }
+
+    while (true)
+    {
+        std::vector<char> buf(524288);
+        auto rSize = recvfrom(serverSocket, buf.data(), buf.size(), 0, (sockaddr*)&clientAddr, (socklen_t*)&clientAddrLen);
+        std::cout << "Received packet from " << inet_ntoa(clientAddr.sin_addr) << ":" << ntohs(clientAddr.sin_port) << std::endl;
+        std::cout << "Recieved message: " << buf.data() << std::endl;
+    }
+    close(serverSocket);
+}
+
 
 void run(uint16_t port)
 {
