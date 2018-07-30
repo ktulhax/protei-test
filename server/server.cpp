@@ -41,6 +41,8 @@ Server::Server(int socket, uint16_t port)
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+    int flag = 1;
+    setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int));
     if (bind(m_socket, (sockaddr*)&serverAddr, sizeof (serverAddr)) == -1)
         throw std::runtime_error("binding error");
 }
