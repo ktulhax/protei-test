@@ -33,9 +33,12 @@ void runUDP(uint16_t port)
         close(clientSocket);
         throw std::runtime_error("connection error");
     }
+    std::string str(64000, '1');
+    std::vector<char> msg(0x80000);
+    send(clientSocket, str.data(), str.size(), 0);
 
-    send(clientSocket, "hello server", strlen("hello server") + 1, 0);
-
+    auto rSize = recv(clientSocket, msg.data(), msg.size(), 0);
+    std::cout << "recieved message: " << rSize;
     shutdown(clientSocket, SHUT_RDWR);
     close(clientSocket);
 }
@@ -65,7 +68,12 @@ void run(uint16_t port)
         throw std::runtime_error("connection error");
     }
 
-    send(clientSocket, "hello server", strlen("hello server") + 1, 0);
+
+    send(clientSocket, "hello", 6, 0);
+    std::vector<char> msg(0x80000);
+    auto rSize = recv(clientSocket, msg.data(), msg.size(), 0);
+    std::cout << "echo size: " << rSize << std::endl;
+    std::cout << "echo: " << msg.data() << std::endl;
 
     shutdown(clientSocket, SHUT_RDWR);
     close(clientSocket);
@@ -74,13 +82,12 @@ void run(uint16_t port)
 int main(void) {
     try
     {
-        run(12312);
+        runUDP(34133);
     }
     catch(std::runtime_error& err)
     {
         std::cout << err.what()<< std::endl;
         return EXIT_FAILURE;
     }
-    std::cout << "ok"<< std::endl;
     return 0;
 }

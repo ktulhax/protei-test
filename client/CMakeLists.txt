@@ -1,12 +1,11 @@
 
-
-
 set(CLIENT_HEADER
-
+	client.h
 )
 
 set(CLIENT_SOURCE
 	main.cpp
+	client.cpp
 )
 
 

@@ -1,95 +1,46 @@
-#include <vector>
+#include "server.h"
 #include <iostream>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/un.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <unistd.h>
 
-void runUDP(uint16_t port)
+void usage()
 {
-    sockaddr_in serverAddr, clientAddr;
-    auto clientAddrLen = sizeof(clientAddr);
-    auto serverSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-    if (serverSocket == -1)
-        throw std::runtime_error("creating socket error");
-
-    memset(&serverAddr, 0, sizeof (serverAddr));
-    serverAddr.sin_family = PF_INET;
-    serverAddr.sin_port = htons(port);
-    serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    if (bind(serverSocket, (sockaddr*)&serverAddr, sizeof (serverAddr)) == -1)
-    {
-        close(serverSocket);
-        throw std::runtime_error("binding error");
-    }
-
-    while (true)
-    {
-        std::vector<char> buf(524288);
-        auto rSize = recvfrom(serverSocket, buf.data(), buf.size(), 0, (sockaddr*)&clientAddr, (socklen_t*)&clientAddrLen);
-        std::cout << "Received packet from " << inet_ntoa(clientAddr.sin_addr) << ":" << ntohs(clientAddr.sin_port) << std::endl;
-        std::cout << "Recieved message: " << buf.data() << std::endl;
-    }
-    close(serverSocket);
+    std::cout << "./server tcp_port udp_port" << std::endl;
 }
 
-
-void run(uint16_t port)
+void waitForExit()
 {
-    sockaddr_in serverAddr;
-    auto serverSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-    if (serverSocket == -1)
-        throw std::runtime_error("creating socket error");
-
-    memset(&serverAddr, 0, sizeof (serverAddr));
-    serverAddr.sin_family = PF_INET;
-    serverAddr.sin_port = htons(port);
-    serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    if (bind(serverSocket, (sockaddr*)&serverAddr, sizeof (serverAddr)) == -1)
-    {
-        close(serverSocket);
-        throw std::runtime_error("binding error");
-    }
-
-    if (listen(serverSocket, 10) == -1)
-    {
-        close(serverSocket);
-        throw std::runtime_error("listening error");
-    }
-
-    while (true)
-    {
-        int clientSocket = accept(serverSocket, 0, 0);
-        if (clientSocket < 0)
-        {
-            close(serverSocket);
-            throw std::runtime_error("accepting error");
-        }
-        std::vector<char> buf(524288);
-        auto rSize = recv(clientSocket, buf.data(), buf.size(), 0);
-        std::cout << "recieved message: " << buf.data() << std::endl;
-        shutdown(clientSocket, SHUT_RDWR);
-        close(clientSocket);
-    }
+    std::cout << "Type 'exit' to terminate application" << std::endl;
+    std::string cmd;
+    while(cmd != "exit")
+        std::cin >> cmd;
 }
 
 int main(int argc, char** argv)
 {
+    if (argc != 3)
+    {
+        usage();
+        return 0;
+    }
     try
     {
-        run(12312);
+        uint16_t tcpPort = std::atoi(argv[1]);
+        uint16_t udpPort = std::atoi(argv[2]);
+        if (tcpPort == udpPort)
+        {
+            std::cout << "Error: ports are equal";
+            return 1;
+        }
+        auto tcpServer = std::shared_ptr<protei::Server>(protei::Server::createServer("tcp", tcpPort));
+        tcpServer->start();
+        auto udpServer = std::shared_ptr<protei::Server>(protei::Server::createServer("udp", udpPort));
+        udpServer->start();
+        waitForExit();
     }
     catch(std::runtime_error& err)
     {
         std::cout << err.what()<< std::endl;
         return EXIT_FAILURE;
     }
-    std::cout << "ok" << std::endl;
     return 0;
 }
