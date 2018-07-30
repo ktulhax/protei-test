@@ -40,7 +40,13 @@ void serverTCPConnection(int clientSocket, std::atomic_bool& stopLoop)
     {
         std::vector<char> msg;
         if (readAllBytes(clientSocket, msg))
+        {
             send(clientSocket, msg.data(), msg.size(), 0);
+            int sum = 0;
+            SetOfNumbers numbers;
+            getMessageStatistic(msg.data(), msg.size(), sum, numbers);
+            printMessageStatistic("Recieved tcp message...", sum, numbers);
+        }
     }
     shutdown(clientSocket, SHUT_RDWR);
     close(clientSocket);

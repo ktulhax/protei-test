@@ -38,6 +38,10 @@ void serverUDPLoop(int serverSocket, std::atomic_bool& stopLoop)
             continue;
         ssize_t rSize = recvfrom(serverSocket, msg.data(), msg.size(), 0, (sockaddr*)&clientAddr, (socklen_t*)&clientAddrLen);
         sendto(serverSocket, msg.data(), (rSize > 0 ? rSize : 0), 0, (sockaddr*)&clientAddr, clientAddrLen);
+        int sum;
+        SetOfNumbers numbers;
+        getMessageStatistic(msg.data(), rSize, sum, numbers);
+        printMessageStatistic("Recieved udp message...", sum, numbers);
     }
     stopLoop = false;
 }

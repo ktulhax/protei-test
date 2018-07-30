@@ -2,6 +2,7 @@
 #define P_SERVER_H
 
 #include "server.h"
+#include <set>
 #define SERVER_BUF_SIZE 0x10000
 
 namespace protei
@@ -23,8 +24,12 @@ public:
 private:
 };
 
+using SetOfNumbers = std::multiset<char, std::greater<char>>;
+
 void initFileDescriptors(fd_set* pFDs, fd_set* pFDsCopy, int socket);
 bool checkConnection(fd_set* pFDs, int serverSocket);
+void getMessageStatistic(const char* msg, size_t length, int& sum, SetOfNumbers& numbers);
+void printMessageStatistic(const char* info, int sum, const SetOfNumbers& numbers);
 
 }
 

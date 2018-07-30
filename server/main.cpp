@@ -9,7 +9,7 @@ void usage()
 
 void waitForExit()
 {
-    std::cout << "Type 'exit' to terminate application" << std::endl;
+    std::cout << "Type 'exit' to terminate application...\n\n";
     std::string cmd;
     while(cmd != "exit")
         std::cin >> cmd;
