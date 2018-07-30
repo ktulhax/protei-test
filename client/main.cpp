@@ -1,3 +1,4 @@
+#include "client.h"
 #include <vector>
 #include <iostream>
 #include <sys/types.h>
@@ -9,80 +10,37 @@
 #include <string.h>
 #include <unistd.h>
 
-void runUDP(uint16_t port)
+void usage()
 {
-    sockaddr_in serverAddr;
-    int clientSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-    if (clientSocket == -1)
-        throw std::runtime_error("socket creating error");
-
-    memset(&serverAddr, 0, sizeof (serverAddr));
-
-    serverAddr.sin_family = PF_INET;
-    serverAddr.sin_port = htons(port);
-    auto err = inet_pton(PF_INET, "127.0.0.1", &serverAddr.sin_addr);
-
-    if (err <= 0)
-    {
-        close(clientSocket);
-        throw std::runtime_error("ip address intialization error");
-    }
-
-    if (connect(clientSocket, (struct sockaddr*) &serverAddr, sizeof (serverAddr)) == -1) {
-        close(clientSocket);
-        throw std::runtime_error("connection error");
-    }
-    std::string str(64000, '1');
-    std::vector<char> msg(0x80000);
-    send(clientSocket, str.data(), str.size(), 0);
-
-    auto rSize = recv(clientSocket, msg.data(), msg.size(), 0);
-    std::cout << "recieved message: " << rSize;
-    shutdown(clientSocket, SHUT_RDWR);
-    close(clientSocket);
+    std::cout << "./client [tcp|udp] server_ipv4 server_port" << std::endl;
 }
 
-void run(uint16_t port)
+int main(int argc, char** argv)
 {
-    sockaddr_in serverAddr;
-    int clientSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-    if (clientSocket == -1)
-        throw std::runtime_error("socket creating error");
-
-    memset(&serverAddr, 0, sizeof (serverAddr));
-
-    serverAddr.sin_family = PF_INET;
-    serverAddr.sin_port = htons(port);
-    auto err = inet_pton(PF_INET, "127.0.0.1", &serverAddr.sin_addr);
-
-    if (err <= 0)
+    if (argc != 4)
     {
-        close(clientSocket);
-        throw std::runtime_error("ip address intialization error");
+        usage();
+        return 0;
     }
-
-    if (connect(clientSocket, (struct sockaddr*) &serverAddr, sizeof (serverAddr)) == -1) {
-        close(clientSocket);
-        throw std::runtime_error("connection error");
-    }
-
-
-    send(clientSocket, "hello", 6, 0);
-    std::vector<char> msg(0x80000);
-    auto rSize = recv(clientSocket, msg.data(), msg.size(), 0);
-    std::cout << "echo size: " << rSize << std::endl;
-    std::cout << "echo: " << msg.data() << std::endl;
-
-    shutdown(clientSocket, SHUT_RDWR);
-    close(clientSocket);
-}
-
-int main(void) {
     try
     {
-        runUDP(34133);
+        protei::Client::Protocol proto;
+        if (::strcmp(argv[1], "tcp") == 0)
+            proto = protei::Client::Protocol::TCP;
+        else if (::strcmp(argv[1], "udp") == 0)
+            proto = protei::Client::Protocol::UDP;
+        else
+        {
+            std::cout << "Incorrect protocol" << std::endl;
+            return 1;
+        }
+        const char* ipaddr = argv[2];
+        const uint16_t port = std::stoi(argv[3]);
+        protei::Client c(proto, ipaddr, port);
+        c.connect();
+        c.send("aloha1", strlen("aloha1") + 1);
+        // c.connect();
+        c.send("aloha12", strlen("aloha12") + 1);
     }
     catch(std::runtime_error& err)
     {

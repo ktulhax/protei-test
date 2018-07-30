@@ -20,16 +20,28 @@
 namespace protei
 {
 
-void serverTCPConnection(int clientSocket)
+bool readAllBytes(int sock, std::vector<char>& msg)
+{
+    bool ret = false;
+    std::vector<char> buffer(SERVER_BUF_SIZE);
+    ssize_t rSize = 0;
+    while ((rSize = recv(sock, buffer.data(), buffer.size(), 0)) > 0)
+    {
+        msg.insert(msg.end(), buffer.begin(), buffer.begin() + rSize);
+        ret = true;
+    }
+    return ret;
+}
+
+void serverTCPConnection(int clientSocket, std::atomic_bool& stopLoop)
 {
     fcntl(clientSocket, F_SETFL, O_NONBLOCK);
-    std::vector<char> msg(SERVER_BUF_SIZE);
-    std::string echoMsg;
-    ssize_t rSize = 0;
-    while ((rSize = recv(clientSocket, msg.data(), msg.size(), 0)) > 0)
-        echoMsg.insert(echoMsg.end(), msg.begin(), msg.begin() + rSize);
-
-    send(clientSocket, echoMsg.data(), echoMsg.size(), 0);
+    while (!stopLoop)
+    {
+        std::vector<char> msg;
+        if (readAllBytes(clientSocket, msg))
+            send(clientSocket, msg.data(), msg.size(), 0);
+    }
     shutdown(clientSocket, SHUT_RDWR);
     close(clientSocket);
 }
@@ -57,15 +69,12 @@ void serverTCPLoop(int serverSocket, std::atomic_bool& stopLoop)
         fdsCopy = fds;
         checkHandlesState();
         if (!checkConnection(&fdsCopy, serverSocket))
-        {
-            std::cout << "waiting for tcp connection" << std::endl;
             continue;
-        }
         int clientSocket = accept(serverSocket, 0, 0);
         if (clientSocket < 0)
             throw std::runtime_error("tcp accepting error");
         // start thread for new tcp connection
-        handles.push_back(std::async(std::launch::async, serverTCPConnection, clientSocket));
+        handles.push_back(std::async(std::launch::async, serverTCPConnection, clientSocket, std::ref(stopLoop)));
     }
     waitEndOfConnections();
     stopLoop = false;

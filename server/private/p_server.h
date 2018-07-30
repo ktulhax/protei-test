@@ -2,7 +2,7 @@
 #define P_SERVER_H
 
 #include "server.h"
-#define SERVER_BUF_SIZE 0x80000
+#define SERVER_BUF_SIZE 0x10000
 
 namespace protei
 {
