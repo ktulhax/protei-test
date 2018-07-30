@@ -51,6 +51,8 @@ void serverTCPConnection(int clientSocket, std::atomic_bool& stopLoop)
         auto res = readAllBytes(clientSocket, msg);
         if (res == TCPState::Success)
         {
+            std::cout << "Size of recieved message: " << msg.size() << std::endl;
+            std::cout << "Recieved message: " << msg.data() << std::endl;
             send(clientSocket, msg.data(), msg.size(), 0);
             int sum = 0;
             SetOfNumbers numbers;

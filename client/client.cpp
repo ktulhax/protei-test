@@ -1,3 +1,4 @@
+#include <thread>
 #include "client.h"
 #include <iostream>
 #include <vector>
@@ -57,9 +58,11 @@ bool Client::readAllBytes(std::string& msg)
 bool Client::send(const char* msg, size_t length)
 {
     auto rSize = ::send(m_socket, msg, length, 0);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     std::string echoMsg;
     bool flag = readAllBytes(echoMsg);
     std::cout << "Size of recieved message: " << echoMsg.size() << std::endl;
+    std::cout << "Recieved message: " << echoMsg.data() << std::endl;
     return flag;
 }
 

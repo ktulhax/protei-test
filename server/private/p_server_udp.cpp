@@ -37,6 +37,8 @@ void serverUDPLoop(int serverSocket, std::atomic_bool& stopLoop)
         if (!checkConnection(&fdsCopy, serverSocket))
             continue;
         ssize_t rSize = recvfrom(serverSocket, msg.data(), msg.size(), 0, (sockaddr*)&clientAddr, (socklen_t*)&clientAddrLen);
+        std::cout << "Size of recieved message: " << msg.size() << std::endl;
+        std::cout << "Recieved message: " << msg.data() << std::endl;
         sendto(serverSocket, msg.data(), (rSize > 0 ? rSize : 0), 0, (sockaddr*)&clientAddr, clientAddrLen);
         int sum;
         SetOfNumbers numbers;
