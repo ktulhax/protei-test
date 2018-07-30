@@ -20,17 +20,26 @@
 namespace protei
 {
 
-bool readAllBytes(int sock, std::vector<char>& msg)
+enum class TCPState {
+    Success,
+    Fail,
+    EndOfSession
+};
+
+TCPState readAllBytes(int sock, std::vector<char>& msg)
 {
-    bool ret = false;
+    bool readFlag = false;
     std::vector<char> buffer(SERVER_BUF_SIZE);
     ssize_t rSize = 0;
     while ((rSize = recv(sock, buffer.data(), buffer.size(), 0)) > 0)
     {
         msg.insert(msg.end(), buffer.begin(), buffer.begin() + rSize);
-        ret = true;
+        readFlag = true;
     }
-    return ret;
+    if (readFlag)
+        return TCPState::Success;
+    else
+        return (rSize == 0 ? TCPState::EndOfSession : TCPState::Fail);
 }
 
 void serverTCPConnection(int clientSocket, std::atomic_bool& stopLoop)
@@ -39,14 +48,17 @@ void serverTCPConnection(int clientSocket, std::atomic_bool& stopLoop)
     while (!stopLoop)
     {
         std::vector<char> msg;
-        if (readAllBytes(clientSocket, msg))
+        auto res = readAllBytes(clientSocket, msg);
+        if (res == TCPState::Success)
         {
             send(clientSocket, msg.data(), msg.size(), 0);
             int sum = 0;
             SetOfNumbers numbers;
             getMessageStatistic(msg.data(), msg.size(), sum, numbers);
-            printMessageStatistic("Recieved tcp message...", sum, numbers);
+            printMessageStatistic("Recieved tcp message", sum, numbers);
         }
+        else if (res == TCPState::EndOfSession)
+            break;
     }
     shutdown(clientSocket, SHUT_RDWR);
     close(clientSocket);

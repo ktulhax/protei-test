@@ -49,15 +49,18 @@ void getMessageStatistic(const char* msg, size_t length, int& sum, SetOfNumbers&
 void printMessageStatistic(const char* info, int sum, const SetOfNumbers& numbers)
 {
     std::cout << info << std::endl;
+    if (numbers.empty())
+    {
+        std::cout << "Numbers not found" << "\n\n";
+        return;
+    }
+    // ...
     std::cout << "sum: " << sum << std::endl;
     std::cout << "numbers: ";
     for (auto number : numbers)
         std::cout << (int)number << " ";
-    if (!numbers.empty())
-    {
-        std::cout << std::endl << "min: " << static_cast<int>(*numbers.rbegin());
-        std::cout << std::endl << "max: " << static_cast<int>(*numbers.begin());
-    }
+    std::cout << std::endl << "min: " << static_cast<int>(*numbers.rbegin());
+    std::cout << std::endl << "max: " << static_cast<int>(*numbers.begin());
     std::cout << "\n\n";
 }
 

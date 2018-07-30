@@ -38,9 +38,17 @@ int main(int argc, char** argv)
         const uint16_t port = std::stoi(argv[3]);
         protei::Client c(proto, ipaddr, port);
         c.connect();
-        c.send("aloha1", strlen("aloha1") + 1);
-        // c.connect();
-        c.send("aloha12", strlen("aloha12") + 1);
+        std::string msg;
+        std::cout << std::endl << "Type 'exit' to terminate application" << std::endl;
+        while (true)
+        {
+            std::cout << std::endl << "Type message: ";
+            std::cin >> msg;
+            if (msg == "exit")
+                break;
+            else
+                c.send(msg.data(), msg.size());
+        }
     }
     catch(std::runtime_error& err)
     {

@@ -41,7 +41,7 @@ void serverUDPLoop(int serverSocket, std::atomic_bool& stopLoop)
         int sum;
         SetOfNumbers numbers;
         getMessageStatistic(msg.data(), rSize, sum, numbers);
-        printMessageStatistic("Recieved udp message...", sum, numbers);
+        printMessageStatistic("Recieved udp message", sum, numbers);
     }
     stopLoop = false;
 }
